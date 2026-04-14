@@ -35,7 +35,7 @@ st.title("📅 Monthly On-Call Rota (4-Week Cycle)")
 
 names_input = st.text_input(
     "Enter 4 names (comma separated)",
-    placeholder="Adam, Michael P, Michael M, Oskar"
+    placeholder="Lewis, Michael P, Michael M, Oskar"
 )
 
 start_date = st.date_input("Week beginning date (start of cycle)")
