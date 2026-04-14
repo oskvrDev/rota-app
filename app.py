@@ -69,7 +69,7 @@ if st.button("Generate Rota"):
 
         file_name = "out_of_hours_rota.xlsx"
         with pd.ExcelWriter(file_name, engine="xlsxwriter") as writer:
-    df.to_excel(writer, index=False, sheet_name="Rota")
+        df.to_excel(writer, index=False, sheet_name="Rota")
 
     workbook = writer.book
     worksheet = writer.sheets["Rota"]
