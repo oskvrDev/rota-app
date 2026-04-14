@@ -6,23 +6,36 @@ import pandas as pd
 def generate_monthly_rota(names, start_date, months):
     rota = []
     current_date = start_date
+    n = len(names)
 
     for month in range(months):
-        # Primary order (rotate each month for fairness over time)
-        primaries = names[month % len(names):] + names[:month % len(names)]
+        # Rotate primaries each month
+        primaries = names[month % n:] + names[:month % n]
 
-        # Secondary = rotated version (shift right by 1)
-        secondaries = [primaries[-1]] + primaries[:-1]
+        # Secondary logic depends on number of people
+        if n >= 2:
+            secondaries = [primaries[-1]] + primaries[:-1]
+        else:
+            secondaries = primaries[:]  # only 1 person
 
-        for week in range(4):  # 4-week cycle
+        for week in range(4):
+            primary = primaries[week % n]
+
+            # Try to avoid same person as secondary
+            secondary = secondaries[week % n]
+
+            if n > 1 and secondary == primary:
+                # pick next person if possible
+                secondary = names[(names.index(primary) + 1) % n]
+
             week_start = current_date
             week_end = current_date + timedelta(days=6)
 
             rota.append({
                 "Week Start": week_start.strftime("%Y-%m-%d"),
                 "Week End": week_end.strftime("%Y-%m-%d"),
-                "Primary": primaries[week % len(primaries)],
-                "Secondary": secondaries[week % len(secondaries)]
+                "Primary": primary,
+                "Secondary": secondary
             })
 
             current_date += timedelta(days=7)
@@ -31,21 +44,23 @@ def generate_monthly_rota(names, start_date, months):
 
 
 # UI
-st.title("📅 Monthly On-Call Rota (4-Week Cycle)")
+st.title("📅 Monthly On-Call Rota (Flexible Team Size)")
 
 names_input = st.text_input(
-    "Enter 4 names (comma separated)",
-    placeholder="Lewis, Michael P, Michael M, Oskar"
+    "Enter names (1–4 people)",
+    placeholder="Adam, Michael P, Michael M, Oskar"
 )
 
-start_date = st.date_input("Week beginning date (start of cycle)")
+start_date = st.date_input("Week beginning date")
 months = st.number_input("Number of months", min_value=1, value=3)
 
 if st.button("Generate Rota"):
     names = [n.strip() for n in names_input.split(",") if n.strip()]
 
-    if len(names) != 4:
-        st.error("This version requires exactly 4 people.")
+    if len(names) == 0:
+        st.error("Please enter at least one name.")
+    elif len(names) > 4:
+        st.error("This version supports up to 4 people.")
     else:
         df = generate_monthly_rota(names, start_date, months)
 
