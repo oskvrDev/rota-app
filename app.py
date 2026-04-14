@@ -9,42 +9,40 @@ def generate_monthly_rota(names, start_date, months):
     n = len(names)
 
     for month in range(months):
-        # Rotate primaries each month
+
+        # rotate primaries monthly
         primaries = names[month % n:] + names[:month % n]
 
-        # Secondary logic depends on number of people
+        # secondary rotation
         if n >= 2:
             secondaries = [primaries[-1]] + primaries[:-1]
         else:
-            secondaries = primaries[:]  # only 1 person
+            secondaries = primaries[:]
 
         for week in range(4):
             primary = primaries[week % n]
-
-            # Try to avoid same person as secondary
             secondary = secondaries[week % n]
 
-            if n > 1 and secondary == primary:
-                # pick next person if possible
+            # avoid same person where possible
+            if n > 1 and primary == secondary:
                 secondary = names[(names.index(primary) + 1) % n]
 
-            week_start = current_date
-            week_end = current_date + timedelta(days=6)
-
             rota.append({
-                "Week Start": week_start.strftime("%Y-%m-%d"),
-                "Week End": week_end.strftime("%Y-%m-%d"),
+                "Week (On-call Night)": current_date.strftime("%Y-%m-%d"),
                 "Primary": primary,
                 "Secondary": secondary
             })
 
+            # move to next week (7 days later)
             current_date += timedelta(days=7)
 
     return pd.DataFrame(rota)
 
 
 # UI
-st.title("📅 Monthly On-Call Rota (Flexible Team Size)")
+st.title("📅 Out-of-Hours Weekly Rota")
+
+st.write("Each entry represents the **on-call night starting Sunday → Monday morning**.")
 
 names_input = st.text_input(
     "Enter names (1–4 people)",
@@ -66,8 +64,7 @@ if st.button("Generate Rota"):
 
         st.dataframe(df)
 
-        # Export
-        file_name = "monthly_rota.xlsx"
+        file_name = "out_of_hours_rota.xlsx"
         df.to_excel(file_name, index=False)
 
         with open(file_name, "rb") as f:
