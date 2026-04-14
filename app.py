@@ -68,7 +68,62 @@ if st.button("Generate Rota"):
         st.dataframe(df)
 
         file_name = "out_of_hours_rota.xlsx"
-        df.to_excel(file_name, index=False)
+        with pd.ExcelWriter(file_name, engine="xlsxwriter") as writer:
+    df.to_excel(writer, index=False, sheet_name="Rota")
+
+    workbook = writer.book
+    worksheet = writer.sheets["Rota"]
+
+    # ----------------------------
+    # COLOURS (match your style)
+    # ----------------------------
+    header_format = workbook.add_format({
+        "bold": True,
+        "bg_color": "#F4B183",   # peach/orange header
+        "font_color": "black",
+        "border": 1,
+        "align": "center",
+        "valign": "vcenter"
+    })
+
+    cell_format = workbook.add_format({
+        "border": 1,
+        "align": "center",
+        "valign": "vcenter"
+    })
+
+    alt_row_format = workbook.add_format({
+        "bg_color": "#D9E1F2",   # light blue stripe
+        "border": 1,
+        "align": "center",
+        "valign": "vcenter"
+    })
+
+    # ----------------------------
+    # HEADER STYLE
+    # ----------------------------
+    for col_num, value in enumerate(df.columns):
+        worksheet.write(0, col_num, value, header_format)
+
+    # ----------------------------
+    # COLUMN WIDTHS
+    # ----------------------------
+    worksheet.set_column("A:B", 18)  # dates
+    worksheet.set_column("C:D", 20)  # names
+
+    # ----------------------------
+    # STRIPED ROWS
+    # ----------------------------
+    for row in range(len(df)):
+        fmt = alt_row_format if row % 2 == 0 else cell_format
+
+        for col in range(len(df.columns)):
+            worksheet.write(row + 1, col, df.iloc[row, col], fmt)
+
+    # ----------------------------
+    # FREEZE HEADER
+    # ----------------------------
+    worksheet.freeze_panes(1, 0)
 
         with open(file_name, "rb") as f:
             st.download_button(
