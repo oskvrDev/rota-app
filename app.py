@@ -1,89 +1,58 @@
 import streamlit as st
 from datetime import timedelta
 import pandas as pd
-import random
 
 
-def generate_fair_rota(names, start_date, num_weeks):
-    # Tracking
-    last_worked = {name: -10 for name in names}
-    total_assignments = {name: 0 for name in names}
-    previous_pair = set()
-
+def generate_monthly_rota(names, start_date, months):
     rota = []
     current_date = start_date
 
-    for week in range(num_weeks):
-        # Eligible = didn't work last week
-        eligible = [
-            n for n in names
-            if last_worked[n] < week - 1
-        ]
+    for month in range(months):
+        # Primary order (rotate each month for fairness over time)
+        primaries = names[month % len(names):] + names[:month % len(names)]
 
-        # If not enough eligible (edge case), relax rule slightly
-        if len(eligible) < 2:
-            eligible = names[:]
+        # Secondary = rotated version (shift right by 1)
+        secondaries = [primaries[-1]] + primaries[:-1]
 
-        # Sort by least assignments (fairness)
-        eligible.sort(key=lambda n: total_assignments[n])
+        for week in range(4):  # 4-week cycle
+            week_start = current_date
+            week_end = current_date + timedelta(days=6)
 
-        # Try to avoid repeating same pair
-        chosen = None
-        for i in range(len(eligible)):
-            for j in range(i + 1, len(eligible)):
-                pair = {eligible[i], eligible[j]}
-                if pair != previous_pair:
-                    chosen = (eligible[i], eligible[j])
-                    break
-            if chosen:
-                break
+            rota.append({
+                "Week Start": week_start.strftime("%Y-%m-%d"),
+                "Week End": week_end.strftime("%Y-%m-%d"),
+                "Primary": primaries[week % len(primaries)],
+                "Secondary": secondaries[week % len(secondaries)]
+            })
 
-        # Fallback if unavoidable
-        if not chosen:
-            chosen = (eligible[0], eligible[1])
-
-        primary, secondary = chosen
-
-        # Update tracking
-        last_worked[primary] = week
-        last_worked[secondary] = week
-        total_assignments[primary] += 1
-        total_assignments[secondary] += 1
-        previous_pair = set(chosen)
-
-        week_end = current_date + timedelta(days=6)
-
-        rota.append({
-            "Week Start": current_date.strftime("%Y-%m-%d"),
-            "Week End": week_end.strftime("%Y-%m-%d"),
-            "Primary": primary,
-            "Secondary": secondary
-        })
-
-        current_date += timedelta(days=7)
+            current_date += timedelta(days=7)
 
     return pd.DataFrame(rota)
 
 
 # UI
-st.title("📅 Fair On-Call Rota Generator")
+st.title("📅 Monthly On-Call Rota (4-Week Cycle)")
 
-names_input = st.text_input("Enter names (comma separated)")
-start_date = st.date_input("Week beginning date")
-num_weeks = st.number_input("Number of weeks", min_value=1, value=6)
+names_input = st.text_input(
+    "Enter 4 names (comma separated)",
+    placeholder="Adam, Michael P, Michael M, Oskar"
+)
+
+start_date = st.date_input("Week beginning date (start of cycle)")
+months = st.number_input("Number of months", min_value=1, value=3)
 
 if st.button("Generate Rota"):
     names = [n.strip() for n in names_input.split(",") if n.strip()]
 
-    if len(names) < 3:
-        st.error("You need at least 3 people for this rota to work properly.")
+    if len(names) != 4:
+        st.error("This version requires exactly 4 people.")
     else:
-        df = generate_fair_rota(names, start_date, num_weeks)
+        df = generate_monthly_rota(names, start_date, months)
 
         st.dataframe(df)
 
-        # Export to Excel
-        file_name = "rota.xlsx"
+        # Export
+        file_name = "monthly_rota.xlsx"
         df.to_excel(file_name, index=False)
 
         with open(file_name, "rb") as f:
