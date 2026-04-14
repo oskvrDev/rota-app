@@ -33,8 +33,8 @@ def generate_monthly_rota(names, start_date, months):
             week_end = current_date + timedelta(days=7)
 
             rota.append({
-                "Week Start": week_start.strftime("%Y-%m-%d %H:%M"),
-                "Week End": week_end.strftime("%Y-%m-%d %H:%M"),
+                "Week Start": week_start.strftime("%Y-%m-%d"),
+                "Week End": week_end.strftime("%Y-%m-%d"),
                 "Primary": primary,
                 "Secondary": secondary
             })
@@ -45,7 +45,7 @@ def generate_monthly_rota(names, start_date, months):
 
 
 # UI
-st.title("📅 Out-of-Hours Rota (Mon 09:00 – Mon 09:00)")
+st.title("📅 Out-of-Hours Rota ")
 
 names_input = st.text_input(
     "Enter names (1–4 people)",
