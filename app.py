@@ -48,12 +48,12 @@ def generate_monthly_rota(names, start_date, months):
 st.title("📅 Out-of-Hours Rota ")
 
 names_input = st.text_input(
-    "Enter names (1–4 people)",
+    "Enter names (1–4 people), comma separated",
     placeholder="Adam, Michael P, Michael M, Oskar"
 )
 
 start_date = st.date_input("Week beginning date")
-months = st.number_input("Number of months", min_value=1, value=3)
+months = st.number_input("Number of months", min_value=1, value=1)
 
 if st.button("Generate Rota"):
     names = [n.strip() for n in names_input.split(",") if n.strip()]
