@@ -1,19 +1,21 @@
 import streamlit as st
-from datetime import timedelta
+from datetime import datetime, timedelta
 import pandas as pd
 
 
 def generate_monthly_rota(names, start_date, months):
     rota = []
-    current_date = start_date
     n = len(names)
+
+    # ensure start is datetime at 09:00
+    current_date = datetime.combine(start_date, datetime.min.time()).replace(hour=9)
 
     for month in range(months):
 
-        # rotate primaries monthly
+        # rotate primaries each month
         primaries = names[month % n:] + names[:month % n]
 
-        # secondary rotation
+        # secondary rotation (offset)
         if n >= 2:
             secondaries = [primaries[-1]] + primaries[:-1]
         else:
@@ -23,24 +25,27 @@ def generate_monthly_rota(names, start_date, months):
             primary = primaries[week % n]
             secondary = secondaries[week % n]
 
-            # avoid same person where possible
+            # avoid same person if possible
             if n > 1 and primary == secondary:
                 secondary = names[(names.index(primary) + 1) % n]
 
+            week_start = current_date
+            week_end = current_date + timedelta(days=7)
+
             rota.append({
-                "Week (On-call Night)": current_date.strftime("%Y-%m-%d"),
+                "Week Start": week_start.strftime("%Y-%m-%d %H:%M"),
+                "Week End": week_end.strftime("%Y-%m-%d %H:%M"),
                 "Primary": primary,
                 "Secondary": secondary
             })
 
-            # move to next week (7 days later)
             current_date += timedelta(days=7)
 
     return pd.DataFrame(rota)
 
 
 # UI
-st.title("📅 Out-of-Hours Weekly Rota")
+st.title("📅 Out-of-Hours Rota (Mon 09:00 – Mon 09:00)")
 
 names_input = st.text_input(
     "Enter names (1–4 people)",
