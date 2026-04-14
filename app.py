@@ -42,8 +42,6 @@ def generate_monthly_rota(names, start_date, months):
 # UI
 st.title("📅 Out-of-Hours Weekly Rota")
 
-st.write("Each entry represents the **on-call night starting Sunday → Monday morning**.")
-
 names_input = st.text_input(
     "Enter names (1–4 people)",
     placeholder="Adam, Michael P, Michael M, Oskar"
